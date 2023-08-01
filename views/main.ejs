@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+    <title>Login/Registration</title>
+    <style>
+      
+      *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+body{
+    height: 100%;
+    background: rgb(205, 117, 10);
+}
+
+.login-page{
+    width: 350px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    padding: 40px;
+    box-shadow: 0 0 20px rgb(0, 0, 0, 0.2), 
+    0 5px 5px 0 rgb(0, 0, 0, 0.24) ;
+    background: #ffff;
+}
+
+.login-page h2{
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.input-box{
+    margin-bottom: 10px;
+}
+
+.input-box input{
+    width: 100%;
+    font-size: 16px;
+    padding: 15px;
+    border: 0;
+    background: #f2f2f2;
+    outline: none;
+}
+
+.login-page button{
+    width: 100%;
+    font-size: 16px;
+    padding: 15px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    background: rgb(205, 89, 7);
+    border: 0;
+    color: #ffff;
+    text-transform: uppercase;
+    transition: all ease .5s;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.login-page button:hover{
+    background: rgb(205, 89, 7,.8);
+}
+
+.login-page p{
+    color: #b3b3b3;
+    font-size: 12px;
+}
+
+.login-page p a{
+    text-decoration: none;
+    color: #ef7036;
+}
+
+.registration-form{
+    display: none;
+}
+    </style>
+
+    <script>
+       $(document).ready(function(){
+
+   $('.message a').click(function(){
+      $('form').animate({height:"toggle", opacity:"toggle"}, "slow")
+   })
+
+  });
+    </script>
+</head>
+
+<body>
+    <div class="login-page">
+        <form action="/login" class="login-form" method="post">
+            <h2>Login</h2>
+            <div class="input-box">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-box">
+                <input type="password" id="password" name="password" placeholder="password" required>
+            </div>
+            <button type="submit">Login</button>
+    
+            <p class="message">Don't have an account? <a href="#">Register now</a></p>
+        </form>
+        <form action="/submit" id="registration-form" class="registration-form" method="post">
+            <h2>New Registration</h2>
+            <div class="input-box">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-box">
+                <input type="email" id="email"name="email" placeholder="email" required>
+            </div>
+            <div class="input-box">
+                <input type="password" id="password"name="password" placeholder="password" required>
+            </div>
+            <button type="submit">Register</button>
+            <p class="message">Already have account? <a href="#">Sign in</a></p>
+        </form>
+    </div>
+    <script src="./server.mjs"></script>
+</body>
+
+</html>

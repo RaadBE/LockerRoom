@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+</head>
+<style type="text/css">
+    body{
+        max-width: 80%;
+        height: auto;
+        margin: 0 auto;
+    }
+    main{
+
+    display: flex;
+    flex-direction: row;
+    width: 90%;
+    justify-content: center;
+    height: 70vh;
+        margin-top: 33px;
+    }
+
+    .right-bar{
+     display: flex;
+    flex-direction: column;
+    align-self: end;
+    flex-grow: 0.6;
+    }
+
+    .messageDisplay{
+            display: flex;
+    align-items: end;
+        background-color: coral;
+    height: 67vh;
+}
+    .left-bar{
+            background-color: aquamarine;
+    }
+</style>
+<script>
+    
+</script>
+<body>
+<main>
+    <div class="left-bar">
+           <div class="top-part">
+            <button>+CreateRoom</button>
+            <button>+CreateRoom</button>
+        </div>
+                <div class="teamRoom">
+            <h3>Team Chat</h3>
+        </div>
+    </div>
+    <div class="right-bar">
+            <div class="messageDisplay">
+                <p><%= data.username + data.message %></p>
+            </div>
+                <div class="sendMessege-area">
+                 <form action="/lobby/chat" class="form" method="post">
+                <input type="text" id="msg" name="msg" placeholder="wrtie your messge" required>
+            <button type="submit">Send</button>
+        </form>
+        </div>
+            <div class="chat-area"> 
+        </div>
+    </div>
+</main>
+
+</body>
+</html>
