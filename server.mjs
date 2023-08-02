@@ -139,23 +139,20 @@ app.post(`/lobby/chat`, authenticateToken,(req,res)=>{
  const  msgs = req.body.msg;
  console.log(msgs);
 const data = { 
-
-  username: `User => ${req.user.username} Sent you `, // Use template literal for string interpolation
+  username: `${req.user.username} :  `, // Use template literal for string interpolation
   message: msgs 
 };
  res.render('./lobby.ejs', {data}) // Pass rr to EJS template
  // res.json(msgs);
  // res.json(msgs);
- // pool.query("INSERT INTO users (msgss) VALUES (?))",
- //  [msgs],
- //      (error, results) => {
- //      console.log(msgs);
- //  });
-
-
+pool.query("UPDATE users SET msgss = ? WHERE username = ?",[req.body.msg, req.user.username],
+      (error, results) => {
+      console.log(msgs);
+  });
 
 })
 const PORT = 3000
 app.listen(PORT, () => console.log(`Server started: http://localhost:${PORT}/`))
 export default pool;
+
 
