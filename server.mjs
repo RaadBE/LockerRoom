@@ -68,7 +68,7 @@ function authenticateToken(req, res, next) {
     if (err) return res.sendStatus(403);
     console.log('Token is verified and it is:', req.cookies.token);  // Here you log the token after it's verified
     req.user = user;
-    console.log(user);
+    console.log(req.user);
     next();  // pass the execution off to whatever request the client intended
   });
 }
@@ -80,7 +80,7 @@ app.get('/login',(req,res)=>{
 
 app.get('/lobby',authenticateToken,(req,res,)=>{
   // console.log(req.query.token);
-    res.render('./lobby.ejs', { data: '' });
+        res.render('./lobby.ejs', { data: '', messages: '' });
 })
 
 app.post('/submit', async (req, res) => {
@@ -117,7 +117,7 @@ app.post('/login',(req, res,next) => {
       const comparison = await bcrypt.compare(password, results[0].password);
       if (comparison) {
         // res.send('Logged in');
-        const token = jwt.sign({ username: username, email: results[0].email, role: results[0].role}, process.env.JWT_SECRET);
+        const token = jwt.sign({ id: results[0].id, username: username, email: results[0].email, Role: results[0].Role}, process.env.JWT_SECRET);
         console.log("jwt: ",token);
          res.cookie('token', token, { httpOnly: true });
         res.redirect(`/lobby`);
@@ -137,20 +137,69 @@ app.post('/login',(req, res,next) => {
 // app.use('/lobby/url',authenticateToken,routerr);
 app.post(`/lobby/chat`, authenticateToken,(req,res)=>{
  const  msgs = req.body.msg;
- console.log(msgs);
+ // console.log(msgs);
 const data = { 
-  username: `${req.user.username} :  `, // Use template literal for string interpolation
+  username: `${req.user.username} :  `,
   message: msgs 
 };
- res.render('./lobby.ejs', {data}) // Pass rr to EJS template
- // res.json(msgs);
- // res.json(msgs);
-pool.query("UPDATE users SET msgss = ? WHERE username = ?",[req.body.msg, req.user.username],
-      (error, results) => {
-      console.log(msgs);
-  });
-
+const user_id = req.user.id;
+    var lobby_id = req.body.lobby_id;  // Extract lobby ID from request body
+    console.log('hey :',lobby_id,user_id);
+    pool.query(
+        "INSERT INTO messages (user_id, lobby_id, message) VALUES (?, ?, ?)",
+        [user_id, lobby_id, msgs],
+        (error, results) => {
+            if (error) {
+                console.log(error);
+                res.status(500).send('Server error');
+            } else {
+         res.render('./lobby.ejs', { data, messages: msgs });
+            }
+        }
+    );
 })
+app.get('/lobby', authenticateToken, (req, res) => {
+  // Get the user_id from the authenticated user
+  const user_id = req.user.id;
+  
+  // Perform a SELECT query to get all messages
+  pool.query(
+    'SELECT * FROM messages',
+    (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+      } else {
+      const messages = results; // Extract the rows from the results object
+      console.log(messages)
+        res.render('./lobby.ejs', { data: '', messages: msgs });
+      }
+    }
+  );
+});
+
+// app.post(`/lobby/chat`, authenticateToken, async(req,res)=>{
+//       console.log('saa',req.user);  // This should log your user object
+//     // const msgs = req.body.msg;
+//     // const user_id = req.user.id;
+//     // var lobby_id = req.body.lobby_id;  // Extract lobby ID from request body
+//     // console.log('hey :',msgs,);
+
+
+
+//     pool.query(
+//         "INSERT INTO messages (user_id, lobby_id, message) VALUES (?, ?, ?)",
+//         [user_id, lobby_id, msgs],
+//         (error, results) => {
+//             if (error) {
+//                 console.log(error);
+//                 res.status(500).send('Server error');
+//             } else {
+//                 res.render('./lobby.ejs', { rr: msgs }); // Pass rr to EJS template
+//             }
+//         }
+//     );
+// })
 const PORT = 3000
 app.listen(PORT, () => console.log(`Server started: http://localhost:${PORT}/`))
 export default pool;

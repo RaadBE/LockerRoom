@@ -54,7 +54,14 @@
     </div>
     <div class="right-bar">
             <div class="messageDisplay">
-                <p><%= data.username + data.message %></p>
+                <!-- <p><%= data.username + data.message %></p> -->
+                  <% if (Array.isArray(messages)) { %>
+    <% messages.forEach((message) => { %>
+      <p><%= message.message %></p>
+    <% }) %>
+  <% } else { %>
+    <p>No messages available.</p>
+  <% } %>
             </div>
                 <div class="sendMessege-area">
                  <form action="/lobby/chat" class="form" method="post">
