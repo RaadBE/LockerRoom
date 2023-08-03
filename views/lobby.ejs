@@ -30,7 +30,9 @@
 
     .messageDisplay{
             display: flex;
-    align-items: end;
+    overflow: scroll;
+    flex-direction: column;
+    align-items: flex-start;
         background-color: coral;
     height: 67vh;
 }
@@ -45,8 +47,12 @@
 <main>
     <div class="left-bar">
            <div class="top-part">
-            <button>+CreateRoom</button>
-            <button>+CreateRoom</button>
+        <form action="/lobby/create" class="form" method="post">
+        <label for="name">Lobby name:</label><br>
+    <input type="text" id="name" name="name"><br>
+    <input type="hidden" id="jwt" name="jwt" value="User's JWT token">
+    <input type="submit" value="Create Lobby">
+        </form>
         </div>
                 <div class="teamRoom">
             <h3>Team Chat</h3>
@@ -54,14 +60,13 @@
     </div>
     <div class="right-bar">
             <div class="messageDisplay">
-                <!-- <p><%= data.username + data.message %></p> -->
-                  <% if (Array.isArray(messages)) { %>
-    <% messages.forEach((message) => { %>
-      <p><%= message.message %></p>
-    <% }) %>
-  <% } else { %>
-    <p>No messages available.</p>
-  <% } %>
+<% if (Array.isArray(messages)) { %>
+  <% messages.forEach((message) => { %>
+    <p><%= message.username %>: <%= message.message %></p>
+  <% }) %>
+<% } else { %>
+  <p>No messages</p>
+<% } %>
             </div>
                 <div class="sendMessege-area">
                  <form action="/lobby/chat" class="form" method="post">
