@@ -80,8 +80,13 @@ app.get('/login',(req,res)=>{
 
 app.get('/lobby',authenticateToken,(req,res,)=>{
   // console.log(req.query.token);
-        res.render('./lobby.ejs', { data: '', messages: '' });
+        res.render('./lobby.ejs', {messages: messages, lobby_id: lobby_id });
+
 })
+
+app.get('/lobby/create', authenticateToken, (req, res) => {
+  res.render('createLobby.ejs');
+});
 
 app.post('/submit', async (req, res) => {
   const { username, password, email } = req.body;
@@ -132,110 +137,56 @@ app.post('/login',(req, res,next) => {
     }
   });
 });
-
-
+app.get('/lobby', authenticateToken, (req, res) => {
+  const user_id = req.user.id;
+  // We'll just get the first lobby the user is admin of. 
+  // If you want to get a specific lobby, you need to adjust this query.
+  pool.query(
+    'SELECT * FROM lobbiess WHERE admin_id = ? LIMIT 1',
+    [user_id],
+    (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).send('Server error');
+      } else if (results.length > 0) {
+        const lobby = results[0];
+        res.render('lobby.ejs', { lobby_name: lobby.name, lobby_id: lobby.id, messages: [] });
+      } else {
+        res.status(404).send('No lobby found');
+      }
+    }
+  );
+});
 
 app.get('/lobby/chat', authenticateToken, (req, res) => {
   // Get the user_id from the authenticated user
   const user_id = req.user.id;
-    const username = req.user.username;
-  
+ const lobby_id = req.body.lobby_id;  
+ const lobby_name = req.body.lobby_name; 
+ console.log('hey :',lobby_id,user_id);
   // Perform a SELECT query to get all messages
   pool.query(
-    'SELECT message FROM USERS.messages;',
+    'SELECT user_id, message FROM messagess;',
     (error, results) => {
       if (error) {
         console.error(error);
         res.status(500).send('Server error');
       } else {
          const messages = results.map(message => ({
-          username: username,
+          username: message.user_id,  // It's recommended to use a JOIN query to get the username instead of user_id.
           message: message.message
         }));
 
-        res.render('./lobby.ejs', {messages: messages });
+       res.render('./lobby.ejs', { lobby_name: lobby_name, lobby_id: lobby_id, messages: messages });
+
       }
     }
   );
 });
-
-// app.use('/lobby/url',authenticateToken,routerr);
-// app.post(`/lobby/chat`, authenticateToken,(req,res)=>{
-//  const  msgs = req.body.msg;
-//  // console.log(msgs);
-// const data = { 
-//   username: `${req.user.username} :  `,
-//   message: msgs 
-// };
-// const user_id = req.user.id;
-//     var lobby_id = req.body.lobby_id;  // Extract lobby ID from request body
-//      const lobby_id = req.body.lobby_id; 
-//     console.log('hey :',lobby_id,user_id);
-//     pool.query(
-//         "INSERT INTO messagess (user_id, lobby_id, message) VALUES (?, ?, ?)",
-//         [user_id, lobby_id, msgs],
-//         (error, results) => {
-//             if (error) {
-//                 console.log(error);
-//                 res.status(500).send('Server error');
-//             } else {
-//         res.redirect(`/lobby/${lobby.name}/${lobby.id}/chat`);
-//             }
-//         }
-//     );
-// })
-
-
-app.post(`/lobby/chat`, authenticateToken,(req,res)=>{
- const  msgs = req.body.msg;
- const data = { 
-   username: `${req.user.username} :  `,
-   message: msgs 
- };
- const user_id = req.user.id;
- const lobby_id = req.body.lobby_id;  
- const lobby_name = req.body.lobby_name;  
- console.log('hey :',lobby_id,user_id);
- pool.query(
-     "INSERT INTO messagess (user_id, lobby_id, message) VALUES (?, ?, ?)",
-     [user_id, lobby_id, msgs],
-     (error, results) => {
-         if (error) {
-             console.log(error);
-             res.status(500).send('Server error');
-         } else {
-             //Fetch lobby details for the redirect
-             pool.query(
-                 "SELECT * FROM lobbies WHERE id = ?",
-                 [lobby_id],
-                 (error, results) => {
-                     if (error) {
-                         console.log(error);
-                         res.status(500).send('Server error');
-                     } else {
-                         const lobby = results[0]; //Assuming that lobby id is unique
-                         res.redirect(`/lobby/${lobby_name}/${lobby_id}/chat`);
-                     }
-                 }
-             );
-         }
-     }
- );
-})
-
-
-
-
-
-
-
 app.post('/lobby/create', authenticateToken, (req, res) => {
   const name = req.body.name;
   const admin_id = req.user.id;
-   // Extract user id from request
-    const lobby_name = req.params.name; // Extract lobby name from request parameters
-
-   var lobby_id = req.body.lobby_id;
+  
   pool.query(
     'INSERT INTO lobbiess (name, admin_id) VALUES (?, ?)', 
     [name, admin_id],
@@ -252,52 +203,53 @@ app.post('/lobby/create', authenticateToken, (req, res) => {
     }
   );
 });
-app.get('/lobby/:name/:id/chat', authenticateToken, (req, res) => {
-  const user_id = req.user.id;
-  const lobby_name = req.params.name;
 
-  pool.query(
-    'SELECT id FROM lobbiess WHERE admin_id = ?',
-    [lobby_name],
-    (error, results) => {
-      if (error) {
-        console.error(error);
-        res.status(500).send('Server error');
-      } else {
-        if(results.length > 0){
-            const lobby_id = results[0].id;
-
-            pool.query(
-              'SELECT username, message FROM messagess WHERE lobby_id = ?',
-              [lobby_id],
-              (error, results) => {
-                if (error) {
-                  console.error(error);
-                  res.status(500).send('Server error');
-                } else {
-                  const messages = results.map(message => ({
-                    username: message.username,
-                    message: message.message
-                  }));
-
-                  res.render('./lobby.ejs', {messages: messages, lobby_id: lobby_id });
-                }
-              }
-            );
-        } else {
-            res.status(404).send('Lobby not found');
-        }
-      }
-    }
-  );
+app.post(`/lobby/:name/:id/chat`, authenticateToken,(req,res)=>{
+ const  msgs = req.body.msg;
+ const data = { 
+   username: `${req.user.username} :  `,
+   message: msgs 
+ };
+ // const user_id = req.user.id;
+ // const lobby_id = req.body.lobby_id;  
+ // const lobby_name = req.body.lobby_name; 
+ console.log('hey :',lobby_id,user_id);
+ pool.query(
+     "INSERT INTO messagess (user_id, lobby_id, message) VALUES (?, ?, ?)",
+     [user_id, lobby_id, msgs],
+     (error, results) => {
+         if (error) {
+             console.log(error);
+             res.status(500).send('Server error');
+         } else {
+             //Fetch lobby details for the redirect
+             pool.query(
+                 "SELECT * FROM lobbiess WHERE id = ?",
+                 [lobby_id],
+                 (error, results) => {
+                     if (error) {
+                         console.log(error);
+                         res.status(500).send('Server error');
+                     } else {
+                   const lobby = { id: results[0].id, name: lobby_name, admin: results[0].admin_id };
+                         console.log('test',lobby);
+                         res.redirect(`/lobby/${lobby.name}/${lobby.id}/chat`);
+                     }
+                 }
+             );
+         }
+     }
+ );
 });
-``
+
 
 
 // app.get('/lobby/:name/:id/chat', authenticateToken, (req, res) => {
+//    const  msgs = req.body.msg;
 //   const user_id = req.user.id;
-//   const lobby_name = req.params.name; // Extract lobby name from request parameters
-//   // Perform a SELECT query to get the id of the lobby with the given name
+//   const lobby_id = req.params.id; // Get lobby_id from route parameters
+//   const lobby_name = req.params.name; // Get lobby_name from route parameters
+
 //   pool.query(
 //     'SELECT id FROM lobbiess WHERE name = ?',
 //     [lobby_name],
@@ -306,101 +258,61 @@ app.get('/lobby/:name/:id/chat', authenticateToken, (req, res) => {
 //         console.error(error);
 //         res.status(500).send('Server error');
 //       } else {
-//         const lobby_id = results[0].id; // Extract the id of the lobby
+//         if(results.length > 0){
+//             const lobby_id = results[0].id;
 
-//         // Now perform a SELECT query to get all messages from the lobby
-//         pool.query(
-//           'SELECT message FROM messagess WHERE lobby_id = ?',
-//           [lobby_id],
-//           (error, results) => {
-//             if (error) {
-//               console.error(error);
-//               res.status(500).send('Server error');
-//             } else {
-//               const messages = results.map(message => ({
-//                 username: username,
-//                 message: message.message
-//               }));
+//             pool.query(
+//               'SELECT user_id, message FROM messagess WHERE lobby_id = ?',
+//               [lobby_id],
+//               (error, results) => {
+//                 if (error) {
+//                   console.error(error);
+//                   res.status(500).send('Server error');
+//                 } else {
+//                   const messages = results.map(message => ({
+//                     username: message.user_id, // You might want to get the username instead of user
+//                     message: message.message
+//                   }));
 
-//               res.render('./lobby.ejs', {messages: messages, lobby_id: lobby_id });
-//             }
-//           }
-//         );
-//       }
-//     }
-//   );
-// });
-
-
-
-// app.post('/lobby/create', authenticateToken, (req, res) => {
-//   const name = req.body.name;
-//   pool.query(
-//     'INSERT INTO lobbies (name) VALUES (?)',
-//     [name], 
-//     (error, results) => {
-//       if (error) {
-//         console.error(error);
-//         res.status(500).send('Server error');
-//       } else {
-//         res.send({ id: results.insertId, name: name });
-//       }
-//     }
-//   );
-// });
-
-// app.get('/lobby/chat', authenticateToken, (req, res) => {
-//   // Get the user_id from the authenticated user
-//   const user_id = req.user.id;
-  
-//   // Perform a SELECT query to get all messages
-//   pool.query(
-//     'SELECT * FROM messages',
-//     (error, results) => {
-//       if (error) {
-//         console.error(error);
-//         res.status(500).send('Server error');
-//       } else {
-//       const messages = results; // Extract the rows from the results object
-//         res.render('./lobby.ejs', {messages: msgs });
-//       }
-//     }
-//   );
-// });
-
-// app.post(`/lobby/chat`, authenticateToken, async(req,res)=>{
-//       console.log('saa',req.user);  // This should log your user object
-//     // const msgs = req.body.msg;
-//     // const user_id = req.user.id;
-//     // var lobby_id = req.body.lobby_id;  // Extract lobby ID from request body
-//     // console.log('hey :',msgs,);
-
-
-
-//     pool.query(
-//         "INSERT INTO messages (user_id, lobby_id, message) VALUES (?, ?, ?)",
-//         [user_id, lobby_id, msgs],
-//         (error, results) => {
-//             if (error) {
-//                 console.log(error);
-//                 res.status(500).send('Server error');
-//             } else {
-//                 res.render('./lobby.ejs', { rr: msgs }); // Pass rr to EJS template
-//             }
+//                   res.render('./lobby.ejs', {messages: messages, lobby_id: lobby_id });
+//                 }
+//               }
+//             );
+//         } else {
+//             res.status(404).send('Lobby not found');
 //         }
-//     );
-// })
+//       }
+//     }
+//   );
+// });
+// app.get('/lobby/:name/:id/chat', authenticateToken, (req, res) => {
+//   const user_id = req.user.id;
+//   const lobby_id = req.params.id;
+//   const lobby_name = req.params.name;
+
+//   pool.query(
+//     'SELECT user_id, message FROM messagess WHERE lobby_id = ?',
+//     [lobby_id],
+//     (error, results) => {
+//       if (error) {
+//         console.error(error);
+//         res.status(500).send('Server error');
+//       } else {
+//         const messages = results.map(message => ({
+//           username: message.user_id,
+//           message: message.message
+//         }));
+
+//         res.render('./lobby.ejs', { lobby_name: lobby_name, lobby_id: lobby_id, messages: messages });
+//       }
+//     }
+//   );
+// });
+
+
+
+
 const PORT = 3000
 app.listen(PORT, () => console.log(`Server started: http://localhost:${PORT}/`))
 export default pool;
 
-
-
-
-// route to get all users from a lobby.
-// route to get all message from a lobby.
-// route to get all message from a specfices user and a lobby or a lobby.
-// route to get all lobbys.
-// route to get all lobbys by user_id
-// router to see al the lobbys by the role .
-// find a way to install 

@@ -47,12 +47,9 @@
 <main>
     <div class="left-bar">
            <div class="top-part">
-        <form action="/lobby/create" class="form" method="post">
-        <label for="name">Lobby name:</label><br>
-    <input type="text" id="name" name="name"><br>
-    <input type="hidden" id="jwt" name="jwt" value="User's JWT token">
-    <input type="submit" value="Create Lobby">
-        </form>
+        <form action="/lobby/create" method="POST">
+    <input type="text" name="name" placeholder="Enter lobby name">
+    <button type="submit">Create Lobby</button>
         </div>
                 <div class="teamRoom">
             <h3>Team Chat</h3>
@@ -69,10 +66,11 @@
 <% } %>
             </div>
                 <div class="sendMessege-area">
-                 <form action="/lobby/chat" class="form" method="post">
-                <input type="text" id="msg" name="msg" placeholder="wrtie your messge" required>
-            <button type="submit">Send</button>
-        </form>
+                 <form action="/lobby/<%= lobby_name %>/<%= lobby_id %>/chat" method="POST">
+  <input type="text" name="msg">
+  <button type="submit">Send</button>
+</form>
+
         </div>
             <div class="chat-area"> 
         </div>
