@@ -155,13 +155,33 @@ app.get('/lobby/chat', authenticateToken, (req, res) => {
     }
   );
 });
+// app.post(`/lobby/:name/:lobby_id/room/chat`, authenticateToken, (req, res) => {
+//   const msgs = req.body.msg;
+//   const user_id = req.user.id;
+//   const lobby_id = req.params.lobby_id;  // Extract lobby ID from request params, not body
+//   const lobby_name = req.params.name; // Extract lobby name from request params
+//   console.log('this is the time',lobby_id,'user also',user_id)
+//     pool.query(
+//       "INSERT INTO chatmessages (user_id, lobby_id, message) VALUES (?, ?, ?)",
+//       [user_id, lobby_id, msgs],
+//       (error, results) => {
+//         if (error) {
+//           console.error(error);
+//           res.status(500).send('Server error');
+//         } else {
+//             // Redirect after the message has been inserted successfully
+//             res.redirect(`/lobby/${lobby_name}/${lobby_id}/room/chat`);
+//         }
+//       }
+//     );
+// });
 app.post(`/lobby/:name/:lobby_id/room/chat`, authenticateToken, (req, res) => {
   const msgs = req.body.msg;
   const user_id = req.user.id;
-  const lobby_id = req.params.lobby_id;  // Extract lobby ID from request params, not body
-  const lobby_name = req.params.name; // Extract lobby name from request params
-  console.log('this is the time',lobby_id,'user also',user_id)
-    pool.query(
+  const lobby_id = req.params.lobby_id;
+  const lobby_name = req.params.name; 
+
+  pool.query(
       "INSERT INTO chatmessages (user_id, lobby_id, message) VALUES (?, ?, ?)",
       [user_id, lobby_id, msgs],
       (error, results) => {
@@ -169,7 +189,6 @@ app.post(`/lobby/:name/:lobby_id/room/chat`, authenticateToken, (req, res) => {
           console.error(error);
           res.status(500).send('Server error');
         } else {
-            // Redirect after the message has been inserted successfully
             res.redirect(`/lobby/${lobby_name}/${lobby_id}/room/chat`);
         }
       }
@@ -178,14 +197,15 @@ app.post(`/lobby/:name/:lobby_id/room/chat`, authenticateToken, (req, res) => {
 
 
 app.post('/lobby/create', authenticateToken, (req, res) => {
-  const name = req.body.name;
-  const user_id = req.body.user_id;
+  // const name = req.body.name;
+  // const user_id = req.body.user_id;
+  // const admin_id = req.user.id;
+  // const lobby_id = req.params.lobby_id;  // extract lobby_id from URL parameters
+    const name = req.body.name;
   const admin_id = req.user.id;
-  const lobby_id = req.params.lobby_id;  // extract lobby_id from URL parameters
-
   pool.query(
-    'INSERT INTO chatlobbiess (name ,admin_id,lobby_id) VALUES (?,?,?)',
-    [name,admin_id,lobby_id], 
+    'INSERT INTO chatlobbiess (name ,admin_id) VALUES (?,?)',
+    [name,admin_id], 
     (error, results) => {
       if (error) {
         console.error(error);
@@ -207,7 +227,9 @@ app.get('/lobby/:name/:lobby_id/room/chat', authenticateToken, (req, res) => {
   const name = req.params.name; // name is also a URL parameter, not body
   const user_id = req.user.id;
   res.render('./lobbyRoom.ejs', {name: name, lobby_id: lobby_id, messages: msgs});
+  });
 const PORT = 3000
+
 app.listen(PORT, () => console.log(`Server started: http://localhost:${PORT}/`))
 export default pool;
 
