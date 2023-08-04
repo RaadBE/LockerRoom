@@ -48,7 +48,7 @@
     <div class="left-bar">
            <div class="top-part">
         <form action="/lobby/create" method="POST">
-    <input type="text" name="name" placeholder="Enter lobby name">
+    <input type="text" name="" placeholder="Enter lobby name">
     <button type="submit">Create Lobby</button>
 </form>
         </div>
@@ -58,7 +58,7 @@
     </div>
     <div class="right-bar">
             <div class="messageDisplay">
-<% if (Array.isArray(messages)) { %>
+                <% if (Array.isArray(messages)) { %>
   <% messages.forEach((message) => { %>
     <p><%= message.username %>: <%= message.message %></p>
   <% }) %>
@@ -66,11 +66,16 @@
   <p>No messages</p>
 <% } %>
             </div>
-       <div class="sendMessege-area">
-    <form action="/lobby/chat" method="POST">
-  <input type="text" name="msg">
-  <button type="submit">Send</button>
-</form>
+                <div class="sendMessege-area">
+              <<div class="sendMessege-area">
+  <form action="/lobby/<%= name %>/<%= lobby_id %>/room/chat" method="POST">
+    <input type="hidden" name="lobby_id" value="<%= lobby_id %>">
+    <input type="text" name="msg">
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+
         </div>
             <div class="chat-area"> 
         </div>
