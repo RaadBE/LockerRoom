@@ -196,38 +196,86 @@ app.post(`/lobby/:name/:lobby_id/room/chat`, authenticateToken, (req, res) => {
 });
 
 
+// app.post('/lobby/create', authenticateToken, (req, res) => {
+//   // const name = req.body.name;
+//   // const user_id = req.body.user_id;
+//   // const admin_id = req.user.id;
+//   // const lobby_id = req.params.lobby_id;  // extract lobby_id from URL parameters
+//     const name = req.body.name;
+//   const admin_id = req.user.id;
+//   pool.query(
+//     'INSERT INTO chatlobbiess (name ,admin_id) VALUES (?,?)',
+//     [name,admin_id], 
+//     (error, results) => {
+//       if (error) {
+//         console.error(error);
+//         res.status(500).send('Server error');
+//       } else {
+//         const lobby_id = results.insertId;  // Define lobby_id here, after results is available
+//         console.log('hey',lobby_id);
+//         // res.send({ id: results.insertId, name: name,admin_id: admin_id });
+//         res.redirect(`/lobby/${name}/${lobby_id}/room/chat`)
+//       }
+//     }
+//   );
+// });
 app.post('/lobby/create', authenticateToken, (req, res) => {
-  // const name = req.body.name;
-  // const user_id = req.body.user_id;
-  // const admin_id = req.user.id;
-  // const lobby_id = req.params.lobby_id;  // extract lobby_id from URL parameters
-    const name = req.body.name;
+  const name = req.body.name;
   const admin_id = req.user.id;
+
+  // Check if a lobby with this name already exists
   pool.query(
-    'INSERT INTO chatlobbiess (name ,admin_id) VALUES (?,?)',
-    [name,admin_id], 
+    'SELECT * FROM chatlobbiess WHERE name = ?',
+    [name],
     (error, results) => {
       if (error) {
-        console.error(error);
+        console.log(error);
         res.status(500).send('Server error');
+      } else if (results.length > 0) {
+        // A lobby with this name already exists, redirect to it
+        const existingLobbyId = results[0].id; // Get the id of the existing lobby
+        res.redirect(`/lobby/${name}/${existingLobbyId}/room/chat`);
       } else {
-        const lobby_id = results.insertId;  // Define lobby_id here, after results is available
-        console.log('hey',lobby_id);
-        // res.send({ id: results.insertId, name: name,admin_id: admin_id });
-        res.redirect(`/lobby/${name}/${lobby_id}/room/chat`)
+        // Create a new lobby
+        pool.query(
+          'INSERT INTO chatlobbiess (name, admin_id) VALUES (?, ?)',
+          [name, admin_id],
+          (error, results) => {
+            if (error) {
+              console.log(error);
+              res.status(500).send('Server error');
+            } else {
+              res.redirect(`/lobby/${name}/${results.insertId}/room/chat`);
+            }
+          }
+        );
       }
     }
   );
 });
 
+
 app.get('/lobby/:name/:lobby_id/room/chat', authenticateToken, (req, res) => {
-  const  msgs = req.body.msg;
-  const admin_id = req.user.id;
-    const lobby_id = req.params.lobby_id;  // extract lobby_id from URL parameters
-  const name = req.params.name; // name is also a URL parameter, not body
-  const user_id = req.user.id;
-  res.render('./lobbyRoom.ejs', {name: name, lobby_id: lobby_id, messages: msgs});
-  });
+  const lobby_id = req.params.lobby_id;
+  const name = req.params.name;
+  pool.query(
+    'SELECT u.username, m.message FROM chatmessages m JOIN chatuserss u ON m.user_id = u.id WHERE m.lobby_id = ?',
+    [lobby_id],
+    (error,results) =>{
+      if (error) {
+        console.log(error);
+        res.status(500).send('Server error')
+      } else {
+        const messages = results.map((message) => ({
+          username: message.username,
+          message: message.message,
+        }));
+        res.render('./lobbyRoom.ejs', {name: name, lobby_id: lobby_id, messages: messages});
+      }
+    });
+});
+
+
 const PORT = 3000
 
 app.listen(PORT, () => console.log(`Server started: http://localhost:${PORT}/`))
